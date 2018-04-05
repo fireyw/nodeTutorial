@@ -5,13 +5,19 @@ const http= require('http'); //http 모듈이 필요하다
 const hostname='127.0.0.1';
 const port = 3000;
 
+//req 요청, res 응답
 const server = http.createServer((req, res)=>{
     res.statusCode=200;
 res.setHeader('Content-Type', 'text/plain');
 res.end('Hello world\n');
-
 });
 
 server.listen(port, hostname, () => {
     console.log(`server running at22  http://${hostname}:${port}/`);
+});
+
+//server 객체를 만들고 listen 함수 실행 의미
+//function 과 =>는 같은 의미이다
+server.listen(port, hostname, function(){
+    console.log(`function server running at  http://${hostname}:${port}/`);
 });
