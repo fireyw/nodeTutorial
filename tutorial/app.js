@@ -1,9 +1,36 @@
 var express= require('express');
+var bodyParser = require('body-parser');
 var app = express();
 app.locals.pretty = true; //source preey align
 app.set('view engine', 'jade');
 app.set('views', './views');
+//app.use(bodyParser.urlencoded()); //use 기능을 붙인다고 생
 app.use(express.static('public')); //public 폴더를 정적인 파일이 위치하는 곳으로
+
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+
+
+app.get('/form', function(req,res){
+	res.render('form');
+});
+
+app.get('/form_receiver', function(req, res){
+	console.log('get');
+	var title=req.query.title;
+	var des=req.query.descryption;
+
+	res.send('get : ' + title + ',' + des);
+});
+
+app.post('/form_receiver', urlencodedParser,function(req, res){
+	console.log('post');
+	var title=req.body.title;
+	var des= req.body.descryption;
+
+	res.send('post : ' + title + ',' + des);
+})
+
+
 
 app.get('/topic/:id', function(req, res){
 	var topics=['javascript is ',
