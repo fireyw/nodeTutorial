@@ -1,13 +1,48 @@
 var express= require('express');
 var bodyParser = require('body-parser');
+var fs= require('fs');
 var app = express();
 app.locals.pretty = true; //source preey align
 app.set('view engine', 'jade');
-app.set('views', './views');
+app.set('views', './views_file'); //render 설정
 //app.use(bodyParser.urlencoded()); //use 기능을 붙인다고 생
 app.use(express.static('public')); //public 폴더를 정적인 파일이 위치하는 곳으로
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
+
+app.get('/topic/new', function(req, res){
+	res.render('new');
+});
+
+app.get('/topic', function(req, res){
+	fs.readdir('data', function(err, files){
+		if(err){
+			console.log(err);
+			res.status(500).send('Internal Server Error');
+		}
+        res.render('view', {topics: files}); //topics 변수 설정해서 jade로 이동
+	});6333
+});
+
+app.get('/topic/:id', function(req, res){
+	var id=req.params.id;
+
+    fs.readdir('data', function(err, files){
+        if(err){
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        }
+        fs.readFile('data/'+id, 'utf8', function(err, data){
+            if(err){
+                console.log(err);
+                res.status(500).send('Internal Server Error');
+            }
+            res.render('view', {topics:files,title:id, des:data});
+        });
+    });
+
+
+});
 
 
 app.get('/form', function(req,res){
@@ -30,9 +65,7 @@ app.post('/form_receiver', urlencodedParser,function(req, res){
 	res.send('post : ' + title + ',' + des);
 })
 
-
-
-app.get('/topic/:id', function(req, res){
+/*app.get('/topic/:id', function(req, res){
 	var topics=['javascript is ',
 	'node js is',
 	'express is'];
@@ -45,7 +78,7 @@ app.get('/topic/:id', function(req, res){
 		`;
 
 	res.send(output);
-});
+});*/
 
 app.get('/topic/:id/:mode', function(req, res){
 	res.send(req.params.id + ',' + req.params.mode);
