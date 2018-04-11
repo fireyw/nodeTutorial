@@ -11,38 +11,53 @@ app.use(express.static('public')); //public 폴더를 정적인 파일이 위치
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 app.get('/topic/new', function(req, res){
-	res.render('new');
+    fs.readdir('data', function(err, files) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        }
+        res.render('new', {topics:files});
+    });
 });
 
-app.get('/topic', function(req, res){
+app.get(['/topic', '/topic/:id'], function(req, res){
 	fs.readdir('data', function(err, files){
 		if(err){
 			console.log(err);
 			res.status(500).send('Internal Server Error');
 		}
-        res.render('view', {topics: files}); //topics 변수 설정해서 jade로 이동
-	});6333
+
+		var id=req.params.id;
+        //topics 변수 설정해서 jade로 이동
+
+		if(id) {
+            fs.readFile('data/' + id, 'utf8', function (err, data) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send('Internal Server Error');
+                }
+                res.render('view', {topics: files, title: id, des: data});         //topics 변수 설정해서 jade로 이동
+            });
+        }else{
+			res.render('view', {topics:files, title:'Hello', des:'javascript'});
+		}
+	});
 });
 
-app.get('/topic/:id', function(req, res){
-	var id=req.params.id;
+app.post('/topic', urlencodedParser, function(req, res){
+    var title=req.body.title;
+    var des= req.body.des;
 
-    fs.readdir('data', function(err, files){
-        if(err){
+    fs.writeFile('data/'+title, des, function(err){
+
+        if (err) {
             console.log(err);
             res.status(500).send('Internal Server Error');
         }
-        fs.readFile('data/'+id, 'utf8', function(err, data){
-            if(err){
-                console.log(err);
-                res.status(500).send('Internal Server Error');
-            }
-            res.render('view', {topics:files,title:id, des:data});
-        });
-    });
-
-
-});
+		//res.send('success');
+		res.redirect('/topic/' + title);
+	})
+})
 
 
 app.get('/form', function(req,res){
@@ -63,7 +78,7 @@ app.post('/form_receiver', urlencodedParser,function(req, res){
 	var des= req.body.descryption;
 
 	res.send('post : ' + title + ',' + des);
-})
+});
 
 /*app.get('/topic/:id', function(req, res){
 	var topics=['javascript is ',
