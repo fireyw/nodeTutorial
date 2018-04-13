@@ -9,10 +9,14 @@ html
         ul
            each topic in topics
                 li
-                    a(href='/topic/'+topic['@rid'])=topic;
+                    - rid = encodeURIComponent(topic['@rid'])
+                    a(href='/topic/'+rid)=topic.NPM
         article
-            h2=title
-            =des
-
+        if topic
+            h2=topic.NPM
+            =topic.Javascript
+        else
+            h2 Welcome
+            | This is server side javascript
         div
             a(href='/topic/new') new

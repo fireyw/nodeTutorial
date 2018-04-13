@@ -35,8 +35,18 @@ app.get('/topic/new', function(req, res){
 app.get(['/topic', '/topic/:id'], function(req, res){
 	var sql="select from topic";
 	db.query(sql).then(function(results){
-		//res.send(results);
-        res.render('new', {topics:results});
+
+		var id = req.params.id;
+		if(id){
+            var sql="select from topic where @rid=:rid";
+            db.query(sql, {params:{rid:id}}).then(function(topic){
+                res.render('view', {topics:results, topic:topic[0]});
+            });
+		}else{
+            res.render('view', {topics:results});
+		}
+
+
 	})
 });
 

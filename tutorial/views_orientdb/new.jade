@@ -8,7 +8,8 @@ html
         ul
             each topic in topics
                 li
-                    a(href='/topic/' + topic['@rid'])=topic.Javascript
+                    - rid = encodeURIComponent(topic['@rid'])
+                    a(href='/topic/' + rid)=topic.Javascript
         article
             form(action='/topic', method='post')
                 p
