@@ -22,15 +22,73 @@ app.use(express.static('public')); //public 폴더를 정적인 파일이 위치
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
-app.get('/topic/new', function(req, res){
-    fs.readdir('data', function(err, files) {
-        if (err) {
-            console.log(err);
+app.get('/topic/add', function(req, res){
+    var sql="select from topic";
+    db.query(sql).then(function(topics){
+        if (topics.length===0) {
+            console.log('There is no record');
             res.status(500).send('Internal Server Error');
         }
-        res.render('view', {topics:files});
+        res.render('add', {topics:topics});
     });
 });
+
+app.post('/topic/add', urlencodedParser, function(req, res){
+    var title=req.body.title;
+    var des= req.body.des;
+    var author= req.body.author;
+    var sql="insert into topic(title, des, author) values(:title, :des, :author)";
+
+    db.query(sql, {params: {
+            title: title,
+            des: des,
+            author: author
+            }
+    }).then(function(results){
+        if(results===0){
+            console.log('No insert');
+        }
+        res.redirect('/topic/'+ encodeURIComponent(results[0]['@rid']));
+    })
+})
+
+app.get('/topic/:id/edit', function(req, res) {
+    console.log('edit get');
+    var sql= "select from topic"
+    var id = req.params.id;
+
+    db.query(sql).then(function(topics){
+        var sql = "select from topic where @rid=:rid";
+        db.query(sql, {params: {rid: id}}).then(function (topic) {
+            res.render('edit', {topics: topics, topic:topic[0]});
+        })
+    })
+})
+
+app.post('/topic/:id/edit', urlencodedParser, function(req, res) {
+    console.log('edit post');
+
+    var sql="update topic set title=:title, des=:des, author=:author where @rid=:rid";
+    var title=req.body.title;
+    var des=req.body.des;
+    var author=req.body.author;
+    var id=req.params.id; //get방식에서 사용하는것으로 Post에서도 사용 가능
+    console.log(id);
+      db.query(sql, {params: {
+              title: title,
+              des: des,
+              author: author,
+              rid:id
+          }
+      }).then(function(topics){
+          if(topics===0){
+              console.log('No update');
+          }
+          res.redirect('/topic/'+encodeURIComponent(id));
+      })
+})
+
+
 
 app.get(['/topic', '/topic/:id'], function(req, res){
 	var sql="select from topic";
@@ -43,7 +101,7 @@ app.get(['/topic', '/topic/:id'], function(req, res){
                 res.render('view', {topics:results, topic:topic[0]});
             });
 		}else{
-            res.render('view', {topics:results});
+            res.render('view', {topics:results, id:id});
 		}
 
 
@@ -86,20 +144,6 @@ app.post('/form_receiver', urlencodedParser,function(req, res){
 	res.send('post : ' + title + ',' + des);
 });
 
-/*app.get('/topic/:id', function(req, res){
-	var topics=['javascript is ',
-	'node js is',
-	'express is'];
-
-	var output =`
-		<a href='/topic?id=0'>javascript</a><br>
-		<a href='/topic?id=1'>node</a><br>
-		<a href='/topic?id=2'>express</a><br>
-		${topics[req.params.id]}
-		`;
-
-	res.send(output);
-});*/
 
 app.get('/topic/:id/:mode', function(req, res){
 	res.send(req.params.id + ',' + req.params.mode);
@@ -115,25 +159,7 @@ app.get('/', function(req, res){
 	res.send('Hello home page');
 });
 
-app.get('/dynamic', function(req, res){
-	var lis='';
-	for(var i=0;i<5;i++){
-		lis = lis + '<li>conding</li>';
-	}
-	var time = Date();
-	var output = `
-				<!doctype html>
-				<html>
-					<body>
-						dynamic test222
-						<ul>
-						${lis} ${time}
-						</ul>
-					</body>
-				</html>
-				`
-	res.send(output);
-});
+
 
 app.get('/route', function(req, res){
 	res.send('Hello Router, <img src="/public.jpg".>');

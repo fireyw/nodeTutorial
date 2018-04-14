@@ -10,13 +10,19 @@ html
            each topic in topics
                 li
                     - rid = encodeURIComponent(topic['@rid'])
-                    a(href='/topic/'+rid)=topic.NPM
+                    a(href='/topic/'+rid)=topic.title
         article
         if topic
-            h2=topic.NPM
-            =topic.Javascript
+            h2=topic.title
+            =topic.des
+            =topic.author
         else
             h2 Welcome
             | This is server side javascript
-        div
-            a(href='/topic/new') new
+        ul
+           li
+                a(href='/topic/add') add
+            if topic
+               li
+                    - rid = encodeURIComponent(topic['@rid'])
+                    a(href='/topic/'+rid+'/edit') edit
