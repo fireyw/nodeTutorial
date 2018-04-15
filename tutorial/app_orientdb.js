@@ -66,7 +66,7 @@ app.get('/topic/:id/edit', function(req, res) {
 })
 
 app.post('/topic/:id/edit', urlencodedParser, function(req, res) {
-    console.log('edit post');
+    console.log('edit post2');
 
     var sql="update topic set title=:title, des=:des, author=:author where @rid=:rid";
     var title=req.body.title;
@@ -88,10 +88,44 @@ app.post('/topic/:id/edit', urlencodedParser, function(req, res) {
       })
 })
 
+app.get('/topic/:id/delete', function(req, res){
+    var sql= "select from topic"
+    var id = req.params.id;
 
+    db.query(sql).then(function(topics){
+        var sql = "select from topic where @rid=:rid";
+        db.query(sql, {params: {rid: id}}).then(function (topic) {
+            res.render('delete', {topics: topics, topic:topic[0]});
+        })
+    })
+ /*   var sql="delete from topic where @rid=:rid";
+    var id=req.params.id;
+    console.log('delete start id : ' + id );
+
+    db.query(sql, {param: {rid:id}}).then(function(results){
+        if(results===0){
+            console.log('No delete');
+        }
+        res.redirect('/topic');
+    })*/
+})
+
+app.post('/topic/:id/delete', urlencodedParser, function(req, res){
+    var sql="delete from topic where @rid=:rid";
+    var id=req.params.id;
+    console.log('delete start id : ' + id );
+
+    db.query(sql, {params: {rid:id}}).then(function(results){
+        if(results===0){
+            console.log('No delete');
+        }
+        res.redirect('/topic');
+    })
+})
 
 app.get(['/topic', '/topic/:id'], function(req, res){
-	var sql="select from topic";
+	var sql="select from topic"
+
 	db.query(sql).then(function(results){
 
 		var id = req.params.id;
