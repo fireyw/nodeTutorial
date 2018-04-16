@@ -1,6 +1,6 @@
 var express= require('express');
-var bodyParser = require('body-parser');
-var fs= require('fs');
+var bodyParser = require('body-parser'); //post방식에서 body tag  사용을 위함
+var fs= require('fs');  //파일 입출력
 
 var OrientDB = require('orientjs');
 var server = OrientDB({
