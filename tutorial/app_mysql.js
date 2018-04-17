@@ -1,21 +1,33 @@
 var express= require('express');
 var bodyParser = require('body-parser'); //post방식에서 body tag  사용을 위함
 
-var OrientDB = require('orientjs');
-var server = OrientDB({
-    host:       'localhost',
-    port:       2424,
-    username:   'root',
-    password:   '111111',
-    name: 'o2'
+var mysql      = require('mysql');
+var db = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : '111111',
+    database : 'o2'
 });
-var db = server.use('o2');
+
+db.connect();
+/*
+
+var sql='select * from topic';
+
+connection.query(sql, function (error, results, fields) {
+    if (error) throw error;
+    console.log('The solution is: ', fields);
+});
+
+connection.end();
+
+*/
 
 
 var app = express();
 app.locals.pretty = true; //source pretty align
 app.set('view engine', 'jade');
-app.set('views', './views_orientdb'); //render 설정
+app.set('views', './views_mysql'); //render 설정
 //app.use(bodyParser.urlencoded()); //use 기능을 붙인다고 생
 app.use(express.static('public')); //public 폴더를 정적인 파일이 위치하는 곳으로
 
@@ -23,7 +35,8 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 app.get('/topic/add', function(req, res){
     var sql="select from topic";
-    db.query(sql).then(function(topics){
+
+    db.query(sql, function (error, topics, fields) {
         if (topics.length===0) {
             console.log('There is no record');
             res.status(500).send('Internal Server Error');
@@ -97,16 +110,6 @@ app.get('/topic/:id/delete', function(req, res){
             res.render('delete', {topics: topics, topic:topic[0]});
         })
     })
- /*   var sql="delete from topic where @rid=:rid";
-    var id=req.params.id;
-    console.log('delete start id : ' + id );
-
-    db.query(sql, {param: {rid:id}}).then(function(results){
-        if(results===0){
-            console.log('No delete');
-        }
-        res.redirect('/topic');
-    })*/
 })
 
 app.post('/topic/:id/delete', urlencodedParser, function(req, res){
@@ -123,14 +126,14 @@ app.post('/topic/:id/delete', urlencodedParser, function(req, res){
 })
 
 app.get(['/topic', '/topic/:id'], function(req, res){
-	var sql="select from topic"
+	var sql="select * from topic"
 
-	db.query(sql).then(function(results){
+	db.query(sql, function (error, results, fields) {
 
 		var id = req.params.id;
 		if(id){
             var sql="select from topic where @rid=:rid";
-            db.query(sql, {params:{rid:id}}).then(function(topic){
+            db.query(sql, {rid:id}, function (error, topic, fields) {
                 res.render('view', {topics:results, topic:topic[0]});
             });
 		}else{
