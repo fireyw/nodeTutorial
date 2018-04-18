@@ -1,5 +1,6 @@
 var express= require('express');
 var bodyParser = require('body-parser'); //post방식에서 body tag  사용을 위함
+var fs= require('fs');  //파일 입출력
 
 var OrientDB = require('orientjs');
 var server = OrientDB({
@@ -47,7 +48,9 @@ app.post('/topic/add', urlencodedParser, function(req, res){
         if(results===0){
             console.log('No insert');
         }
-        res.redirect('/topic/'+ encodeURIComponent(results[0]['@rid']));
+        console.log(results);
+        //res.redirect('/topic/'+ encodeURIComponent(results[0]['@rid']));
+        res.send(results);
     })
 })
 
@@ -140,6 +143,21 @@ app.get(['/topic', '/topic/:id'], function(req, res){
 
 	})
 });
+
+app.post('/topic', urlencodedParser, function(req, res){
+    var title=req.body.title;
+    var des= req.body.des;
+
+    fs.writeFile('data/'+title, des, function(err){
+
+        if (err) {
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        }
+		//res.send('success');
+		res.redirect('/topic/' + title);
+	})
+})
 
 
 app.get('/form', function(req,res){

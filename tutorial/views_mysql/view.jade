@@ -9,13 +9,13 @@ html
         ul
            each topic in topics
                 li
-                    - rid = encodeURIComponent(topic['@rid'])
-                    a(href='/topic/'+rid)=topic.title
+
+                    a(href='/topic/'+topic.id)=topic.title
         article
         if topic
             h2=topic.title
             =topic.des
-            =topic.author
+            div='by '+ topic.author
         else
             h2 Welcome
             | This is server side javascript
@@ -23,8 +23,7 @@ html
            li
                 a(href='/topic/add') add
             if topic
-                - rid = encodeURIComponent(topic['@rid'])
                li
-                    a(href='/topic/'+rid+'/edit') edit
+                    a(href='/topic/'+ topic.id+'/edit') edit
                li
-                    a(href='/topic/' + rid + '/delete') delete
+                    a(href='/topic/' + topic.id+ '/delete') delete

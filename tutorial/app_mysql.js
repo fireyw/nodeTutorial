@@ -1,5 +1,6 @@
 var express= require('express');
 var bodyParser = require('body-parser'); //post방식에서 body tag  사용을 위함
+const util = require('util');
 
 var mysql      = require('mysql');
 var db = mysql.createConnection({
@@ -22,8 +23,6 @@ connection.query(sql, function (error, results, fields) {
 connection.end();
 
 */
-
-
 var app = express();
 app.locals.pretty = true; //source pretty align
 app.set('view engine', 'jade');
@@ -34,7 +33,7 @@ app.use(express.static('public')); //public 폴더를 정적인 파일이 위치
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 app.get('/topic/add', function(req, res){
-    var sql="select from topic";
+    var sql="select * from topic";
 
     db.query(sql, function (error, topics, fields) {
         if (topics.length===0) {
@@ -49,29 +48,26 @@ app.post('/topic/add', urlencodedParser, function(req, res){
     var title=req.body.title;
     var des= req.body.des;
     var author= req.body.author;
-    var sql="insert into topic(title, des, author) values(:title, :des, :author)";
+    var sql="insert into topic(title, des, author) values(?, ?, ?)";
 
-    db.query(sql, {params: {
-            title: title,
-            des: des,
-            author: author
-            }
-    }).then(function(results){
+    console.log('post topic add')
+    db.query(sql, [title,des,author],function(error, results, fields){
+        console.log(results);
         if(results===0){
             console.log('No insert');
         }
-        res.redirect('/topic/'+ encodeURIComponent(results[0]['@rid']));
+        res.redirect('/topic/'+ results.insertId);
     })
 })
 
 app.get('/topic/:id/edit', function(req, res) {
     console.log('edit get');
-    var sql= "select from topic"
+    var sql= "select * from topic"
     var id = req.params.id;
 
-    db.query(sql).then(function(topics){
-        var sql = "select from topic where @rid=:rid";
-        db.query(sql, {params: {rid: id}}).then(function (topic) {
+    db.query(sql, function(err, topics, fields){
+        var sql = "select * from topic where id=?";
+        db.query(sql, [id],function (err, topic, fields) {
             res.render('edit', {topics: topics, topic:topic[0]});
         })
     })
@@ -80,44 +76,38 @@ app.get('/topic/:id/edit', function(req, res) {
 app.post('/topic/:id/edit', urlencodedParser, function(req, res) {
     console.log('edit post2');
 
-    var sql="update topic set title=:title, des=:des, author=:author where @rid=:rid";
+    var sql="update topic set title=?, des=?, author=? where id=?";
     var title=req.body.title;
     var des=req.body.des;
     var author=req.body.author;
     var id=req.params.id; //get방식에서 사용하는것으로 Post에서도 사용 가능
     console.log(id);
-      db.query(sql, {params: {
-              title: title,
-              des: des,
-              author: author,
-              rid:id
-          }
-      }).then(function(topics){
+      db.query(sql,[title, des, author, id], function(err, topics, fields){
           if(topics===0){
               console.log('No update');
           }
-          res.redirect('/topic/'+encodeURIComponent(id));
+          res.redirect('/topic/'+id);
       })
 })
 
 app.get('/topic/:id/delete', function(req, res){
-    var sql= "select from topic"
+    var sql= "select * from topic"
     var id = req.params.id;
 
-    db.query(sql).then(function(topics){
-        var sql = "select from topic where @rid=:rid";
-        db.query(sql, {params: {rid: id}}).then(function (topic) {
+    db.query(sql, function(error, topics){
+        var sql = "select * from topic where id=?";
+        db.query(sql, [id], function (error, topic) {
             res.render('delete', {topics: topics, topic:topic[0]});
         })
     })
 })
 
 app.post('/topic/:id/delete', urlencodedParser, function(req, res){
-    var sql="delete from topic where @rid=:rid";
+    var sql="delete from topic where id=?";
     var id=req.params.id;
     console.log('delete start id : ' + id );
 
-    db.query(sql, {params: {rid:id}}).then(function(results){
+    db.query(sql, [id], function(error, results, fields){
         if(results===0){
             console.log('No delete');
         }
@@ -127,20 +117,29 @@ app.post('/topic/:id/delete', urlencodedParser, function(req, res){
 
 app.get(['/topic', '/topic/:id'], function(req, res){
 	var sql="select * from topic"
+    var id=req.params.id;
+
+	console.log('mysql id view : ' + id);
 
 	db.query(sql, function (error, results, fields) {
 
 		var id = req.params.id;
 		if(id){
-            var sql="select from topic where @rid=:rid";
-            db.query(sql, {rid:id}, function (error, topic, fields) {
-                res.render('view', {topics:results, topic:topic[0]});
+            var sql="select * from topic where id=?";
+            db.query(sql, [id], function (error, topic) {
+
+                /*console.log('all t : '+util.inspect(topic, false, null))
+                console.log('all f: '+util.inspect(fields, false, null))*/
+
+                if(error){
+                    console.log(error)
+                }else {
+                    res.render('view', {topics: results, topic: topic[0]});
+                }
             });
 		}else{
             res.render('view', {topics:results, id:id});
 		}
-
-
 	})
 });
 
