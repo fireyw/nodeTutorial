@@ -11,18 +11,7 @@ var db = mysql.createConnection({
 });
 
 db.connect();
-/*
 
-var sql='select * from topic';
-
-connection.query(sql, function (error, results, fields) {
-    if (error) throw error;
-    console.log('The solution is: ', fields);
-});
-
-connection.end();
-
-*/
 var app = express();
 app.locals.pretty = true; //source pretty align
 app.set('view engine', 'jade');
