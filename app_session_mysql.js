@@ -1,26 +1,38 @@
 var express= require('express');
-var session= require('express-session');
-var bodyParser= require('body-parser');
+var session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session);
 
+var bodyParser= require('body-parser');
 var app = express();
 
-var urlencodedParser = bodyParser.urlencoded({ extended: false });
+var options = {
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: '111111',
+    database: 'o2'
+};
 
-app.use(urlencodedParser);
-//app.set('trust proxy', 1) // trust first proxy
+var sessionStore = new MySQLStore(options);  //fileStore와 다르게 options이 꼭 필요하
+
 app.use(session({
-    secret: 'keyboard cat',
-    saveUninitialized: true,
-    resave: false
-    //cookie: { secure: true }
+    key: 'session_cookie_name',
+    secret: 'session_cookie_secret',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false
 }));
+
+
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+app.use(urlencodedParser);
 
 app.get('/auth/logout', function(req, res){
     delete req.session.displayName;  //session delete (js command)
 
-    res.send(`<h1>welcome</h1>
-                  <a href="/auth/login">login</a>  
-        `);
+    req.session.save(function(){ //세션 저장 전에 redirect를 방지하기 위해 삽입
+        res.redirect('/welcome');
+    });
 });
 
 app.post('/auth/login', function(req, res){
@@ -35,7 +47,10 @@ app.post('/auth/login', function(req, res){
 
     if(uname==user.username && pwd==user.pwd){
         req.session.displayName=user.displayName;
-        res.redirect('/welcome');
+        req.session.save(function(){ //세션 저장 전에 redirect를 방지하기 위해 삽입
+            res.redirect('/welcome');
+        });
+
     }else {
         res.send('who are you? <a href="/auth/login">login</a>');
     }
@@ -80,6 +95,6 @@ app.get('/count', function(req, res){
 });
 
 
-app.listen(3003, function(){
-    console.log('3003 port start');
+app.listen(3000, function(){
+    console.log('3000 port start');
 });
