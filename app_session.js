@@ -1,11 +1,13 @@
 var express= require('express');
 var session= require('express-session');
 var bodyParser= require('body-parser');
-
+var sha256=require('sha256');
+var bkfd2Password = require("pbkdf2-password");
+var hasher = bkfd2Password();
 var app = express();
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
-
+var salt="!@#12312";
 app.use(urlencodedParser);
 //app.set('trust proxy', 1) // trust first proxy
 app.use(session({
@@ -26,19 +28,42 @@ app.get('/auth/logout', function(req, res){
 app.post('/auth/login', function(req, res){
     var user= {
         username:'fireyw',
-        pwd:'1111',
+        pwd:'D8bS8+C+Pj89bMs7N+BDnhgDcIixkqgaRCMVw9buNKckgy1yuI9i+oRsPI3wZcp4v88Bo2o4gRbZTgWYiLI0V3OzzhISC8UdWEF2CwXcc43r8YnMKft4DlAKyfb6/EwqWnbkCwaj2qESh70OgxA5m0iVushg+OxqahXiwcjYXPo=',
+        salt: 'sBlEshImGUA6rYL8VughbrRxyojPJAbfMbx9UQ+SlexbwxjWuDeb0AtdPrgL/stoM7fVsUu325mIODbsgpgO0Q==',
         displayName:'용우동'
     };
 
     var uname=req.body.username;
     var pwd= req.body.password;
 
-    if(uname==user.username && pwd==user.pwd){
+    if(uname ==user.username){
+        var opts = {
+            password: pwd,
+            salt:user.salt
+        };
+
+        return hasher(opts, function(err, pass, salt, hash) {
+           console.log('hash: ' +hash);
+           console.log('user.pwd ' + user.pwd);
+
+           if(hash==user.pwd){
+                req.session.displayName=user.displayName;
+                req.session.save(function(){
+                    res.redirect('/welcome');
+                });
+
+           }else{
+                res.send('/auth/login');
+           }
+        });
+    }
+
+/*    if(uname==user.username && sha256(pwd+user.salt)==user.pwd){
         req.session.displayName=user.displayName;
         res.redirect('/welcome');
     }else {
         res.send('who are you? <a href="/auth/login">login</a>');
-    }
+    }*/
 });
 
 app.get('/welcome', function(req, res){
