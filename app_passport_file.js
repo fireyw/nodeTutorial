@@ -21,25 +21,45 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 app.use(urlencodedParser);
 
 app.get('/auth/logout', function(req, res){
-    delete req.session.displayName;  //session delete (js command)
+    delete req.logout();  //session delete (js command)
 
     res.send(`<h1>welcome</h1>
                   <a href="/auth/login">login</a>  
         `);
 });
+
+var user= {
+    username:'fireyw',
+    pwd:'1111',
+    displayName:'용우동'
+};
+
+passport.serializeUser(function(user, done) {
+    //done(null, user.id);  //식별자를 전달하는데 여기에선 id 가 없어서 username으로 수정
+    console.log("serializeUser", user);
+    done(null, user.username);  //done이라는 이름으로 세션에 등록하는 과
+});
+
+passport.deserializeUser(function(id, done) {//serialize 함수를 통해 세션에 등록된 정보가 재로그인되면 여기가 호출됨
+    console.log("deserializeUser", id);
+    if(user.username==id){
+        done(null, user);
+    }
+    /*User.findById(id, function(err, user) {
+        done(err, user);
+    });*/
+});
+
+
 passport.use(new LocalStrategy(
     function(username, password, done){
-        var user= {
-            username:'fireyw',
-            pwd:'1111',
-            displayName:'용우동'
-        };
 
         var uname=username;
         var pwd= password;
 
         if(uname==user.username && pwd==user.pwd){
-            done(null, user); //done이란 함수가 실행되기로 약속되어있따
+            console.log("LocalStrategy", user);
+            done(null, user); //serialize에서 done이란 함수가 실행되기로 약속되어있따
         }else {
             done(null, false );
         }
@@ -47,7 +67,7 @@ passport.use(new LocalStrategy(
 ));
 app.post('/auth/login',
         passport.authenticate('local',
-            { successRedirect: '/welcom',
+            { successRedirect: '/welcome',
               failureRedirect: '/auth/login',
               failureFlash: false })
 );
@@ -72,8 +92,8 @@ app.post('/auth/login', function(req, res){
 */
 
 app.get('/welcome', function(req, res){
-    if(req.session.displayName){
-        res.send(`<h1>Hello ${req.session.displayName}</h1> 
+    if(req.user&& req.user.displayName){
+        res.send(`<h1>Hello ${req.user.displayName}</h1> 
                   <a href="/auth/logout">logout</a>
                   `);
     }else{
