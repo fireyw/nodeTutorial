@@ -71,25 +71,6 @@ app.post('/auth/login',
               failureRedirect: '/auth/login',
               failureFlash: false })
 );
-/*
-app.post('/auth/login', function(req, res){
-    var user= {
-        username:'fireyw',
-        pwd:'1111',
-        displayName:'용우동'
-    };
-
-    var uname=req.body.username;
-    var pwd= req.body.password;
-
-    if(uname==user.username && pwd==user.pwd){
-        req.session.displayName=user.displayName;
-        res.redirect('/welcome');
-    }else {
-        res.send('who are you? <a href="/auth/login">login</a>');
-    }
-});
-*/
 
 app.get('/welcome', function(req, res){
     if(req.user&& req.user.displayName){
